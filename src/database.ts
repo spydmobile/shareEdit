@@ -1,3 +1,4 @@
+
 import fs from 'fs';
 import events from 'events';
 export const eventEmitter = new events.EventEmitter();
@@ -15,7 +16,8 @@ export interface SimpleLiveObject {
 }
 
 
-// create a class for live objects
+
+/* The LiveObject class is a class that represents a live object */
 export class LiveObject {
 
     private handler?: ReturnType<typeof setTimeout>;
@@ -32,6 +34,10 @@ export class LiveObject {
         this.client = socketId;
         this.startTimer();
     }
+/**
+ * It takes the id and label of the object and saves it to the database.
+ * @returns The flat object is being returned.
+ */
     flatten() {
         const flat = {
             id: this.id,
@@ -41,6 +47,11 @@ export class LiveObject {
         return flat;
 
     }
+/**
+ * It returns a new object with the same properties as the current object, but with the client property
+ * removed
+ * @returns An object with the id, label, isLive, lastUpdated, and client properties.
+ */
     simple() {
         return {
             id: this.id,
@@ -51,6 +62,9 @@ export class LiveObject {
         }
     }
     
+    /**
+     * The function starts a timer, and when the timer expires, it emits an event
+     */
     startTimer() {
         console.log("startedTimex");
         // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -67,6 +81,10 @@ export class LiveObject {
         }, 30000);
     }
 
+/**
+ * If the user is editing, reset the timer.
+ * @TODO: This is not called anywhere yet. connect it to the edit field * 
+ */
     resetTimer() {
         clearTimeout(this.handler);
     }
@@ -74,6 +92,10 @@ export class LiveObject {
       
 }
 
+/**
+ * It reads the contents of the fakeDB.json file and returns the parsed JSON data
+ * @returns An array of objects
+ */
 export const readAll = async () => {
     // use fs to read fakeDB.json
     console.log("🛢️  Reading all records from the db");
@@ -83,6 +105,12 @@ export const readAll = async () => {
 }
 
 
+/**
+ * It reads the fakeDB.json file, parses it into a JavaScript object, and returns the record with the
+ * matching id
+ * @param {string} id - string - the id of the record we want to read
+ * @returns The first record that matches the id
+ */
 export const readById = async (id: string) => {
     // use fs to read fakeDB.json
     console.log(`🛢️  Reading record #${id} from the db`);
@@ -91,6 +119,12 @@ export const readById = async (id: string) => {
     return records.filter((r: DBRecord) => r.id == id)[0];
 }
 
+/**
+ * It reads the fakeDB.json file, parses the JSON, finds the record with the same id as the record
+ * passed in, updates the record, and then writes the updated records back to the file
+ * @param {DBRecord} record - DBRecord - this is the record that we want to save to the database.
+ * @returns A promise that resolves to a boolean
+ */
 export const saveDBRecord = async (record: DBRecord) => {
     // use fs to read fakeDB.json
     console.log(`🛢️  Saving record #${record.id} to the db`);
@@ -109,6 +143,12 @@ export const saveDBRecord = async (record: DBRecord) => {
     }
 
 }
+/**
+ * It takes a database record and a socket ID, and returns a live object
+ * @param {DBRecord} record - The record from the database
+ * @param {string} socketId - The socket id of the client that created the record.
+ * @returns A live object
+ */
 export const createLiveObject = (record: DBRecord, socketId: string) => {
     // create a live object
     console.log("🔥 Creating a live object");
@@ -116,6 +156,11 @@ export const createLiveObject = (record: DBRecord, socketId: string) => {
     return liveRecord;
 }
 
+/**
+ *  Save a live object to the database
+ * @param {LiveObject} liveRecord - LiveObject - the live object to save
+ * @returns A promise that resolves to the saved record
+ */
 export const saveLiveObject = async (liveRecord: LiveObject) => {
     // save the data out of hte live object to the database 
     console.log("🔥 Saving a live object");

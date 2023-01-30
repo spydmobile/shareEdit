@@ -1,3 +1,4 @@
+/* Telling the linter to ignore the `any` type. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
@@ -165,6 +166,7 @@ io.on("connection", async (socket) => {
             return
         }
     })
+
     socket.on("disconnect", (reason) => {
         console.log("🔗🔴 A user disconnected from socket", socket.id, reason);
         // remove the socket id from the activeUsers array
@@ -180,37 +182,20 @@ io.on("connection", async (socket) => {
 
 
 // attach the logging middleware to the app
-// app.use(serverLog);
+// app.use(serverLog); // disabled during development
 // serve the static files from the public folder
 app.use(express.static('public'));
 
-// serve the compiled javascrip files as static files from the dist folder
+// serve the compiled javascript files as static files from the dist folder
 app.use("/js", express.static('dist/js'));
 
+// serves up the application at hte web root
 app.get('/', (req: Request, res: Response) => {
     // send the HTML version of our template to the browser
     res.render('pages/edit');
 });
 
-
-// app.get('/api/seed', async (req: Request, res: Response) => {
-//     // send the database data to the browser.
-//     try {
-//         const data = await readAll()
-//         res.json(data);
-
-//     } catch (error) {
-//         console.log(error);
-//         res.json([]);
-//     }
-
-
-
-
-// });
-
-
-
+/* Telling the server to listen on the port specified in the .env file. */
 
 httpServer.listen(port, () => {
     //launch the backend and log it
