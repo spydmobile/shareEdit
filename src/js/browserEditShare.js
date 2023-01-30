@@ -33,11 +33,29 @@ function updateUiFromCache(cache, socket) {
     renderRecords(cache, socket);
     // clear the record viewer
     console.log("clear the record viewer");
+    clearRecordViewer();
 
     // clear the editor
     console.log("clear the editor");
-
+    clearEditor();
 }
+function clearRecordViewer() {
+    console.log("clearRecordViewer");
+    const ldoDisplay = document.getElementById('ldoDisplay');
+    ldoDisplay.innerHTML = '';
+}
+
+function clearEditor() {
+    console.log("clearEditor");
+    const recordId = document.getElementById('recordId');
+    recordId.value = '';
+    const recordTitle = document.getElementById('recordTitle');
+    recordTitle.value = '';
+    const editorSave = document.getElementById('editorSave');
+    editorSave.disabled = true;
+    
+}
+
 
 function renderRecord(label, id, socket) {
     console.log("renderRecord");
@@ -94,6 +112,11 @@ function editRecord(id, socket) {
                 const recordTitle = document.getElementById('recordTitle');
                 recordTitle.value = data.label;
 
+                // enable the editor-save button
+                const editorSave = document.getElementById('editorSave');
+                editorSave.disabled = false;
+
+
                 const ldoDisplay = document.getElementById('ldoDisplay');
                 ldoDisplay.innerHTML = ""
                 ldoDisplay.innerText = JSON.stringify(data, null, 2);
@@ -102,7 +125,15 @@ function editRecord(id, socket) {
 
                 resolve(data);
             });
+            socket.on('record-cleanup', (data) => {
+                console.log(data);
+                clearEditor();
+                clearRecordViewer();
 
+
+
+                resolve(null);
+            });
 
         } catch (error) {
             console.log(error);
@@ -175,11 +206,14 @@ function editRecord(id, socket) {
 
 function removeOldData(id, client, activity_list) {
     return new Promise((resolve) => {
+        console.log("removeOldData", { id, client, activity_list });
         // the activity_list is the ul element
         // filter the elements and remove the ones that match the id and client
         let children = activity_list.children;
         children = Array.from(children);
+        console.log({ children });
         children.forEach((child) => {
+            console.log({ child });
             const idMatch = child.innerText.includes(id);
             const clientMatch = child.innerText.includes(client);
             if (idMatch && clientMatch) {

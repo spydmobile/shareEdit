@@ -1,12 +1,24 @@
 import fs from 'fs';
-
+import events from 'events';
+export const eventEmitter = new events.EventEmitter();
 export interface DBRecord {
     id: string;
     label: string;
 }
 
+export interface SimpleLiveObject {
+    id: string;
+    label: string;
+    isLive: boolean;
+    lastUpdated: Date;
+    client: string;
+}
+
+
 // create a class for live objects
 export class LiveObject {
+
+    private handler?: ReturnType<typeof setTimeout>;
     id: string;
     label: string;
     isLive: boolean;
@@ -18,6 +30,7 @@ export class LiveObject {
         this.isLive = true;
         this.lastUpdated = new Date();
         this.client = socketId;
+        this.startTimer();
     }
     flatten() {
         const flat = {
@@ -28,6 +41,37 @@ export class LiveObject {
         return flat;
 
     }
+    simple() {
+        return {
+            id: this.id,
+            label: this.label,
+            isLive: this.isLive,
+            lastUpdated: this.lastUpdated,
+            client: this.client
+        }
+    }
+    
+    startTimer() {
+        console.log("startedTimex");
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+        this.handler = setTimeout(function () {
+            console.log("Live Object Timexed");
+            // create an event
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const eventData:any = self.simple();
+            eventEmitter.emit('timex', eventData)
+
+
+
+        }, 30000);
+    }
+
+    resetTimer() {
+        clearTimeout(this.handler);
+    }
+    
+      
 }
 
 export const readAll = async () => {

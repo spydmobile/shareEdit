@@ -5,9 +5,9 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import { Logger } from "tslog";
 import { createServer } from "http";
-import { readAll, readById, createLiveObject, DBRecord, LiveObject } from './database'
+import { readAll, readById, createLiveObject, DBRecord, LiveObject, eventEmitter } from './database'
 import { Server } from "socket.io";
-import { time } from 'console';
+
 const fancyLogger = new Logger();
 const liveObjects: any[] = []
 const activeUsers: any[] = []
@@ -52,6 +52,19 @@ function serverLog(req: Request, res: Response, next: NextFunction) {
 
 // setup the io handler
 io.on("connection", (socket) => {
+    eventEmitter.on('timex', (data) => {
+        // since the liveObject timexed, it is not loger valid.
+        console.log("liveObject timexed", liveObjects);
+        // we must save it and remove it from the liveObjects array.
+        // so lets find it
+        const targetRecord = liveObjects.filter((r: LiveObject) => r.client == data.client && r.id == data.id)[0];
+        // remove the target record from the list
+        liveObjects.splice(liveObjects.indexOf(targetRecord), 1);
+        // const flat = targetRecord.flatten();
+         console.log("Object Checked back in", liveObjects);
+        io.emit('record-cleanup', targetRecord.simple());
+        console.log("-------------------------------------");
+    })
     console.log("🔗🟢 A user connected to socket", socket.id);
     activeUsers.push(socket.id)
     console.log("activeUsers after connection", activeUsers);
@@ -93,7 +106,7 @@ io.on("connection", (socket) => {
 
                     const flat = openRecord.flatten();
                     console.log("saved the record", flat);
-                    io.emit('record-notify', flat);
+                    io.emit('record-notify', openRecord);
                     console.log("-------------------------------------");
                 }
 
@@ -131,16 +144,20 @@ io.on("connection", (socket) => {
                 liveObjects.push(liveRecord);
                 console.log("-------------------------------------");
                 // send the record to the user
-                socket.emit('edit-reply', liveRecord);
+                socket.emit('edit-reply', liveRecord.simple());
+                console.log("Sent the record to the user", liveRecord.simple());
                 // notify all users
-                io.emit('edit-notify', liveRecord);
+                io.emit('edit-notify', liveRecord.simple());
+                console.log("Notified all users");
+                return
             }
 
 
 
         } catch (error) {
-            console.log(error);
+            console.log("major error", error);
             socket.emit('edit-reply', { id: "" });
+            return
         }
     })
     socket.on("disconnect", (reason) => {
