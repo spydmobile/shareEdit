@@ -51,13 +51,13 @@ function serverLog(req: Request, res: Response, next: NextFunction) {
 }
 
 // setup the io handler
-io.on("connection", (socket) => {
-    eventEmitter.on('timex', (data) => {
+io.on("connection", async (socket) => {
+    eventEmitter.on('timex', async (data) => {
         // since the liveObject timexed, it is not loger valid.
         console.log("liveObject timexed", liveObjects);
         // we must save it and remove it from the liveObjects array.
         // so lets find it
-        const targetRecord = liveObjects.filter((r: LiveObject) => r.client == data.client && r.id == data.id)[0];
+        const targetRecord = await liveObjects.filter((r: LiveObject) => r.client == data.client && r.id == data.id)[0];
         // remove the target record from the list
         liveObjects.splice(liveObjects.indexOf(targetRecord), 1);
         // const flat = targetRecord.flatten();
@@ -65,12 +65,17 @@ io.on("connection", (socket) => {
         io.emit('record-cleanup', targetRecord.simple());
         console.log("-------------------------------------");
     })
+    console.log(" ");
     console.log("🔗🟢 A user connected to socket", socket.id);
-    activeUsers.push(socket.id)
+    await activeUsers.push(socket.id)
     console.log("activeUsers after connection", activeUsers);
 
     // send to all clients
-    io.emit('user-announce', activeUsers);
+    console.log("notifying all users of new connection");
+    // sleep for 3 seconds
+    await new Promise(r => setTimeout(r, 3000));
+    await io.emit('user-announce', activeUsers);
+    console.log("All users notified");
     socket.on('seed-request', async () => {
 
         console.log('IO: ' + `seed request from ${socket.id}`);

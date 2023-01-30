@@ -150,13 +150,17 @@ function editRecord(id, socket) {
     console.log("Loading data into the cache");
     // load the data from the server
     const cache = await loadData(socket);
+    console.log("Updating the UI from the cache");
     updateUiFromCache(cache, socket);
 
     // client-side
+    
     socket.on("connect", () => {
         console.log(`my socket ID is: ${socket.id}`);
     });
+    console.log("ready for a connection");
 
+    
     socket.on("user-announce", (list) => {
         console.log(`user-announce: ${list}`); // x8WIv7-mJelg7on_ALbx
         const user_list = document.getElementById('user_list');
@@ -177,7 +181,7 @@ function editRecord(id, socket) {
         // add an li element to the user_list
 
     });
-
+    console.log("ready for user-announce");
     socket.on('edit-notify', (data) => {
         console.log("edit-notify", data);
         const activity_list = document.getElementById('activity_list');
@@ -187,6 +191,7 @@ function editRecord(id, socket) {
         activity_list.appendChild(newLi);
 
     });
+    console.log("ready for edit-notify");
     socket.on('record-notify', async (data) => {
         console.log("record-notify", data);
         const activity_list = document.getElementById('activity_list');
