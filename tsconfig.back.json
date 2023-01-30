@@ -3,9 +3,8 @@
     "compilerOptions": {
         "outDir": "dist",
         "esModuleInterop" : true,
-        "allowJs": true,
-        "lib": ["dom","dom.iterable"],
+        "lib": ["dom"],
     },
-    "include": ["src"],
+    "include": ["src_server"],
     "exclude": ["node_modules"]
   }

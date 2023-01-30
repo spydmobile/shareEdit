@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "label": "chevy"
+  },
+  {
+    "id": 2,
+    "label": "Tesla"
+  },
+  {
+    "id": 3,
+    "label": "Nissan"
+  },
+  {
+    "id": 4,
+    "label": "Toyota"
+  },
+  {
+    "id": 5,
+    "label": "Honda"
+  }
+]

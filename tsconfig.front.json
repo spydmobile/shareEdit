@@ -1,11 +1,11 @@
 {
     "extends": "@tsconfig/node16/tsconfig.json",
     "compilerOptions": {
-        "outDir": "dist",
+        "outDir": "dist/js",
         "esModuleInterop" : true,
-        "allowJs": true,
         "lib": ["dom","dom.iterable"],
+        "target": "es2019",
     },
-    "include": ["src"],
+    "include": ["src_client"],
     "exclude": ["node_modules"]
   }

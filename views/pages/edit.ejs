@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<title>Share Edit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="/socket.io/socket.io.js"></script>
+<script>
+ 
+</script>
+<script type="module" src="js/browserEditShare.js"></script>
+<!-- here we are just triggering the modal on refresh - for development only  -->
+
+<body onload="document.getElementById('id01').style.display='block'">
+
+    <div class="w3-container">
+        <h2>Share and Edit Demo</h2>
+
+        <button onclick="document.getElementById('id01').style.display='block'"
+            class="w3-btn w3-white w3-border w3-border-green w3-round-large">Launch Editor</button>
+
+        <div id="id01" class="w3-modal">
+            <div class="w3-modal-content w3-card-4 w3-animate-zoom w3-round-large" style="max-width:600px">
+
+                <div class="w3-center"><br>
+                    <span onclick="document.getElementById('id01').style.display='none'"
+                        class="w3-button w3-xlarge w3-transparent w3-display-topright" title="Close Modal">×</span>
+                    <img src="https://github.com/spydmobile/shareEdit/actions/workflows/pages/pages-build-deployment/badge.svg"
+                        alt="Badge" style="width:30%" class="w3-margin-top">
+                </div>
+                <hr>
+                <div class="w3-section">
+                    <div class="flex-container w3-container">
+
+                        <div id="record-list" class="flex-items w3-container">
+                            <!-- This will be replaced by the browser logic -->
+                            <!-- this will be alist of records from the database -->
+                        </div>
+                        <div style="width:800px" class="w3-border flex-items w3-container">
+                            <h3>Editor</h3>
+                            <hr>
+                            
+                   
+                            
+                                <label for="recordTitle"><b>Record ID</b></label>
+                            <input type="text" id="recordId" class="w3-input w3-border w3-margin-bottom" placeholder="Record Id"
+                                name="recordId" disabled>
+
+                                <label for="recordTitle"><b>Record Title</b></label>
+                                <input type="text" id="recordTitle" class="w3-input w3-border w3-margin-bottom" placeholder="Record Title"
+                                    name="recordTitle" required>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="w3-section">
+                        <div class="w3-border w3-container">
+                            <h3>Debug the Live Data Object State</h3>
+                            <div id="ldoDisplay" class="w3-container">
+                                <!-- This will be replaced by the browser logic -->
+                                <!-- this will be a snapshot of the live object  -->
+                        </div>
+                    </div>
+
+                    <div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
+                        <h4>Current Activity</h4>
+                        <ul id="activity_list">
+                           
+                        </ul>
+                        <h4>Current Users</h4>
+                        <ul id="user_list">
+                           
+                        </ul>
+
+                    </div>
+
+                </div>
+             
+
+            </div>
+        </div>
+
+</body>
+
+</html>
