@@ -1,5 +1,7 @@
 # shared edit demo
 
+[![pages-build-deployment](https://github.com/spydmobile/shareEdit/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/spydmobile/shareEdit/actions/workflows/pages/pages-build-deployment)
+
 Some research and development is required to be sure that the Live Object Editing paradigm is the right one for IntelliFire. I am building a proof of concept live demo, of the entire concept. the work is quite simple compared to intellifire, but this prototype will show that live object editing is superior to old school form to database editing.
 
 In short, editing a record instantiates a live aware object across the active userspace, so as user 1 edits, record 5, all other users and their system are aware of this, and keeps users informed and insures that a record can only be edited by one person at a time.
