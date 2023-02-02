@@ -61,7 +61,6 @@ io.on("connection", async (socket) => {
         const targetRecord = await liveObjects.filter((r: LiveObject) => r.client == data.client && r.id == data.id)[0];
         // remove  targetRecord record from the liveObjects array
         liveObjects.splice(liveObjects.indexOf(targetRecord), 1);
-        const flat = targetRecord.flatten();
          console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
         io.emit('record-cleanup', targetRecord.simple());
         console.log("-------------------------------------");
