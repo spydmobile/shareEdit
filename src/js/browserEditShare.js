@@ -126,7 +126,7 @@ function editRecord(id, socket) {
                 resolve(data);
             });
             socket.on('record-cleanup', (data) => {
-                console.log(data);
+                console.log("record-cleanup", data);
                 clearEditor();
                 clearRecordViewer();
 

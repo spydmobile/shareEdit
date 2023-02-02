@@ -93,47 +93,47 @@ export class LiveObject {
 }
 
 /**
- * It reads the contents of the fakeDB.json file and returns the parsed JSON data
+ * It reads the contents of the database/fakeDB.json file and returns the parsed JSON data
  * @returns An array of objects
  */
 export const readAll = async () => {
-    // use fs to read fakeDB.json
+    // use fs to read database/fakeDB.json
     console.log("🛢️  Reading all records from the db");
-    const data = await fs.promises.readFile('./fakeDB.json', 'utf-8');
+    const data = await fs.promises.readFile('./database/fakeDB.json', 'utf-8');
     return JSON.parse(data);
 
 }
 
 
 /**
- * It reads the fakeDB.json file, parses it into a JavaScript object, and returns the record with the
+ * It reads the database/fakeDB.json file, parses it into a JavaScript object, and returns the record with the
  * matching id
  * @param {string} id - string - the id of the record we want to read
  * @returns The first record that matches the id
  */
 export const readById = async (id: string) => {
-    // use fs to read fakeDB.json
+    // use fs to read database/fakeDB.json
     console.log(`🛢️  Reading record #${id} from the db`);
-    const data = await fs.promises.readFile('./fakeDB.json', 'utf-8');
+    const data = await fs.promises.readFile('./database/fakeDB.json', 'utf-8');
     const records = JSON.parse(data);
     return records.filter((r: DBRecord) => r.id == id)[0];
 }
 
 /**
- * It reads the fakeDB.json file, parses the JSON, finds the record with the same id as the record
+ * It reads the database/fakeDB.json file, parses the JSON, finds the record with the same id as the record
  * passed in, updates the record, and then writes the updated records back to the file
  * @param {DBRecord} record - DBRecord - this is the record that we want to save to the database.
  * @returns A promise that resolves to a boolean
  */
 export const saveDBRecord = async (record: DBRecord) => {
-    // use fs to read fakeDB.json
+    // use fs to read database/fakeDB.json
     console.log(`🛢️  Saving record #${record.id} to the db`);
-    const data = await fs.promises.readFile('./fakeDB.json', 'utf-8');
+    const data = await fs.promises.readFile('./database/fakeDB.json', 'utf-8');
     const records = JSON.parse(data);
     const index = records.findIndex((r: DBRecord) => r.id == record.id);
     records[index] = record;
     try {
-        await fs.promises.writeFile('./fakeDB.json', JSON.stringify(records, null, 2));
+        await fs.promises.writeFile('./database/fakeDB.json', JSON.stringify(records, null, 2));
 
         return true
     } catch (error) {
