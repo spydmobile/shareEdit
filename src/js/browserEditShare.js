@@ -3,7 +3,7 @@
 
 
 var MY_ID = null;
-
+const appVersion = "0.0.1";
 function loadData(socket) {
     return new Promise((resolve) => {
         console.log("loadData")
@@ -147,6 +147,10 @@ function editRecord(id, socket) {
 //aiife 
 (async function () {
     const socket = io();
+    // add the current app version to the page
+    const appVersionElement = document.getElementById('versionSpan');
+    appVersionElement.innerText = appVersion;
+
     console.log("Loading data into the cache");
     // load the data from the server
     const cache = await loadData(socket);
