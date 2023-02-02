@@ -55,21 +55,21 @@ function serverLog(req: Request, res: Response, next: NextFunction) {
 io.on("connection", async (socket) => {
     eventEmitter.on('timex', async (data) => {
         // since the liveObject timexed, it is not loger valid.
-        console.log("liveObject timexed", liveObjects);
+        console.log(`liveObject ${data.label} timexed, there are now`, liveObjects.length, "live Objects");
         // we must save it and remove it from the liveObjects array.
         // so lets find it
         const targetRecord = await liveObjects.filter((r: LiveObject) => r.client == data.client && r.id == data.id)[0];
-        // remove the target record from the list
+        // remove  targetRecord record from the liveObjects array
         liveObjects.splice(liveObjects.indexOf(targetRecord), 1);
-        // const flat = targetRecord.flatten();
-         console.log("Object Checked back in", liveObjects);
+        const flat = targetRecord.flatten();
+         console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
         io.emit('record-cleanup', targetRecord.simple());
         console.log("-------------------------------------");
     })
     console.log(" ");
     console.log("🔗🟢 A user connected to socket", socket.id);
     await activeUsers.push(socket.id)
-    console.log("activeUsers after connection", activeUsers);
+    console.log("activeUsers after connection", activeUsers.length);
 
     // send to all clients
     console.log("notifying all users of new connection");
@@ -98,21 +98,42 @@ io.on("connection", async (socket) => {
             // A client can only be editing one record at a time.
 
             //is the client already editing a record?
-            console.log("liveobjects", liveObjects);
+            console.log("total liveobjects", liveObjects.length);
             const openRecord = liveObjects.filter((r: LiveObject) => r.client == socket.id)[0];
             if (openRecord) {
                 // we must close the open record before we can edit a new one.
-                console.log("Found an open record", openRecord);
+                console.log("Found an open record", openRecord.label);
                 if (openRecord.id === id) {
                     console.log("We are already editing that record, do nothing.");
+                    // reset the timex
                     return
                 }
                 else {
                     console.log("We are editing a different record, close the open record.");
+                    if (openRecord.isEdited) {
+                        const flat = openRecord.flatten();
+                        console.log("saved the record", flat);
+                        io.emit('record-notify', openRecord);
+                        
+                        
+                        // remove  targetRecord record from the liveObjects array
+                        liveObjects.splice(liveObjects.indexOf(openRecord), 1);
+                        console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
+                        io.emit('record-cleanup', openRecord.simple());
 
-                    const flat = openRecord.flatten();
-                    console.log("saved the record", flat);
-                    io.emit('record-notify', openRecord);
+
+
+
+
+
+                    }
+                    else {
+                        console.log("record was not edited, no need to save");
+                          // remove  targetRecord record from the liveObjects array
+                          liveObjects.splice(liveObjects.indexOf(openRecord), 1);
+                          console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
+                          io.emit('record-cleanup', openRecord.simple());
+                    }
                     console.log("-------------------------------------");
                 }
 
@@ -199,5 +220,6 @@ app.get('/', (req: Request, res: Response) => {
 
 httpServer.listen(port, () => {
     //launch the backend and log it
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+    console.clear();
+    console.log(`🔥[server]: Server is running at http://localhost:${port}`);
 });
