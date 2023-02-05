@@ -53,23 +53,31 @@ function serverLog(req: Request, res: Response, next: NextFunction) {
 
 // setup the io handler
 io.on("connection", async (socket) => {
+    console.log("IO-I: 🟢🔗 A user connected to socket", socket.id);
     eventEmitter.on('timex', async (data) => {
         // since the liveObject timexed, it is not loger valid.
-        console.log("liveObject timexed", liveObjects);
+        console.log(`liveObject ${data.label} timexed, there are now`, liveObjects.length, "live Objects");
         // we must save it and remove it from the liveObjects array.
         // so lets find it
         const targetRecord = await liveObjects.filter((r: LiveObject) => r.client == data.client && r.id == data.id)[0];
-        // remove the target record from the list
-        liveObjects.splice(liveObjects.indexOf(targetRecord), 1);
-        // const flat = targetRecord.flatten();
-         console.log("Object Checked back in", liveObjects);
-        io.emit('record-cleanup', targetRecord.simple());
-        console.log("-------------------------------------");
+        // remove  targetRecord record from the liveObjects array
+        if (typeof targetRecord !== 'undefined') {
+            liveObjects.splice(liveObjects.indexOf(targetRecord), 1);
+            console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
+           io.emit('record-cleanup', targetRecord.simple());
+           console.log("IO-O:🧹 record-cleanup");
+           console.log("-------------------------------------");
+           return
+        } else {
+            console.log("Object not found, there are ", liveObjects.length, "live Objects");
+            console.log("-------------------------------------");
+        }        
+    
     })
     console.log(" ");
-    console.log("🔗🟢 A user connected to socket", socket.id);
+    
     await activeUsers.push(socket.id)
-    console.log("activeUsers after connection", activeUsers);
+    console.log("activeUsers after connection", activeUsers.length);
 
     // send to all clients
     console.log("notifying all users of new connection");
@@ -79,7 +87,7 @@ io.on("connection", async (socket) => {
     console.log("All users notified");
     socket.on('seed-request', async () => {
 
-        console.log('IO: ' + `seed request from ${socket.id}`);
+        console.log('IO-I: 🌱' + `seed request from ${socket.id}`);
         try {
             const data = await readAll()
             console.log("Sending data to client");
@@ -92,27 +100,48 @@ io.on("connection", async (socket) => {
     })
     socket.on('edit-request', async (id) => {
         try {
-            console.log('IO: ' + `edit request from ${socket.id}`);
+            console.log('IO-I: ✍🏻' + `edit request from ${socket.id}`);
             console.log("for record #", id);
             console.log("-------------------------------------");
             // A client can only be editing one record at a time.
 
             //is the client already editing a record?
-            console.log("liveobjects", liveObjects);
+            console.log("total liveobjects", liveObjects.length);
             const openRecord = liveObjects.filter((r: LiveObject) => r.client == socket.id)[0];
             if (openRecord) {
                 // we must close the open record before we can edit a new one.
-                console.log("Found an open record", openRecord);
+                console.log("Found an open record", openRecord.label);
                 if (openRecord.id === id) {
                     console.log("We are already editing that record, do nothing.");
+                    // reset the timex
                     return
                 }
                 else {
                     console.log("We are editing a different record, close the open record.");
+                    if (openRecord.beenEdited) {
+                        const flat = openRecord.flatten();
+                        console.log("saved the record", flat);
+                        io.emit('record-notify', openRecord);
+                        
+                        
+                        // remove  targetRecord record from the liveObjects array
+                        liveObjects.splice(liveObjects.indexOf(openRecord), 1);
+                        console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
+                        io.emit('record-cleanup', openRecord.simple());
 
-                    const flat = openRecord.flatten();
-                    console.log("saved the record", flat);
-                    io.emit('record-notify', openRecord);
+
+
+
+
+
+                    }
+                    else {
+                        console.log("record was not edited, no need to save");
+                          // remove  targetRecord record from the liveObjects array
+                          liveObjects.splice(liveObjects.indexOf(openRecord), 1);
+                          console.log("Object Checked back in, there are now", liveObjects.length, "live Objects");
+                          io.emit('record-cleanup', openRecord.simple());
+                    }
                     console.log("-------------------------------------");
                 }
 
@@ -166,9 +195,88 @@ io.on("connection", async (socket) => {
             return
         }
     })
+    socket.on('edit-action', async (id) => {
+        try {
+            console.log('IO-I: 💬 ' + `edit Action from ${socket.id}`);
+            console.log("for record #", id);
+            console.log("-------------------------------------");
+            // A client can only be editing one record at a time.
 
+            //is the client already editing a record?
+            console.log("total liveobjects", liveObjects.length);
+            const openRecord = liveObjects.filter((r: LiveObject) => r.client == socket.id && r.id == id)[0];
+            if (openRecord) {
+                //user is editing the record
+                console.log("User is editing the record");
+                // reset the timex on this record.
+                openRecord.resetTimer()
+
+
+
+            }
+
+
+        } catch (error) {
+
+            return
+        }
+    })
+    socket.on('edit-save', async (data) => {
+        try {
+            console.log('IO-I: ✍🏻' + `edit save from ${socket.id}`);
+            console.log("for record ", data);
+            console.log("-------------------------------------");
+            // A client can only be editing one record at a time.
+
+            //is the client already editing a record?
+            console.log("total liveobjects", liveObjects.length);
+            const openRecord = liveObjects.filter((r: LiveObject) => r.client == socket.id)[0];
+            if (openRecord) {
+            
+                console.log("Found an open record", openRecord.label);
+                if (Number(openRecord.id) === Number(data.id)) {
+                    console.log("We have the record, save it.");
+                    
+                    await openRecord.endTimer();
+                    openRecord.beenEdited = true;
+                    openRecord.label = data.label;
+                    const final = openRecord.simple();
+                    await openRecord.flatten();
+                    console.log("final", final);
+                    // send the record to the user
+                    // socket.emit('edit-stop', final);
+                    // // notify all users
+                    // io.emit('edit-stop-notify', final);
+                    io.emit('record-cleanup', final);
+                    console.log("IO-O:🧹 record-cleanup");
+                    console.log("-------------------------------------");
+                    return
+
+                }
+   
+
+            }
+            else {
+                console.log("No open record found", openRecord);
+  
+            }
+
+
+
+
+
+
+
+
+        } catch (error) {
+            console.log("major error", error);
+            socket.emit('edit-reply', { id: "" });
+            return
+        }
+    })
+   
     socket.on("disconnect", (reason) => {
-        console.log("🔗🔴 A user disconnected from socket", socket.id, reason);
+        console.log("IO-I: 🔴🔗 A user disconnected from socket", socket.id, reason);
         // remove the socket id from the activeUsers array
         console.log("activeUsers before splice", activeUsers);
         activeUsers.splice(activeUsers.indexOf(socket.id), 1);
@@ -199,5 +307,6 @@ app.get('/', (req: Request, res: Response) => {
 
 httpServer.listen(port, () => {
     //launch the backend and log it
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+    console.clear();
+    console.log(`🔥[server]: Server is running at http://localhost:${port}`);
 });
