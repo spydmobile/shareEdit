@@ -23,7 +23,7 @@
 [discord badge]: https://flat.badgen.net/discord/members/nBuUfHuDtV?icon=discord
 [discord link]: https://discord.gg/nBuUfHuDtV
 
-[latest release badge]: https://flat.badgen.net/github/release/spydmobile/shareEdit/main?icon=github
+[latest release badge]: https://flat.badgen.net/github/release/spydmobile/shareEdit?icon=github
 [latest release link]: https://github.com/spydmobile/shareEdit/releases
 
 [github stars badge]: https://flat.badgen.net/github/stars/spydmobile/shareEdit?icon=github
