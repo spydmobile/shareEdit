@@ -3,7 +3,7 @@
 
 
 var MY_ID = null;
-
+const CURRENT_VERSION = "1.0.0-alpha-1";
 function loadData(socket) {
     return new Promise((resolve) => {
         console.log("loadData")
@@ -12,7 +12,7 @@ function loadData(socket) {
             socket.emit('seed-request');
             console.log("Requested:  waiting for data...");
             socket.on('seed-reply', (data) => {
-                console.log("socket response received");
+                console.log("IO-I: 🌱 seed-reply");
                 console.log(data);
                 resolve(data);
             });
@@ -53,6 +53,9 @@ function clearEditor() {
     recordId.value = '';
     const recordTitle = document.getElementById('recordTitle');
     recordTitle.value = '';
+    recordTitle.classList.add('w3-disabled')
+    recordTitle.disabled = true;
+
     const editorSave = document.getElementById('editorSave');
     editorSave.disabled = true;
 
@@ -73,24 +76,31 @@ function tidyActivity(data) {
             activity_list.removeChild(listItems[i]);
         }
     }
-   // now lets add message but remove it after 30 seconds
-   // but only if it is not already there
-    const listItems2 = activity_list.getElementsByTagName('li');
-    for (let i = 0; i < listItems2.length; i++) {
-        if (listItems2[i].innerHTML === message) {
-            return;
+
+
+    if (data.beenEdited) {
+        // now lets add message but remove it after 30 seconds
+        // but only if it is not already there
+        const listItems2 = activity_list.getElementsByTagName('li');
+        for (let i = 0; i < listItems2.length; i++) {
+            if (listItems2[i].innerHTML === message) {
+                return;
+            }
         }
+
+
+        const li = document.createElement('li');
+        li.innerHTML = `${message}`;
+        activity_list.appendChild(li);
+        setTimeout(() => {
+            activity_list.removeChild(li);
+        }, 30000);
     }
 
 
-    const li = document.createElement('li');
-    li.innerHTML = `${message}`;
-    activity_list.appendChild(li);
-    setTimeout(() => {
-        activity_list.removeChild(li);
-    }, 30000);
 
-   
+
+
 }
 
 function renderRecord(label, id, socket) {
@@ -139,14 +149,15 @@ function editRecord(id, socket) {
 
             console.log("socketEmitEdit");
             socket.emit('edit-request', id)
+            console.log("IO-O: ✍🏻 edit-request", id);
             console.log("socketWaiting");
             socket.on('edit-reply', (data) => {
-                console.log(data);
+                console.log("IO-I: ✍🏻 edit-reply", data);
                 // change the record button to indicate it is being edited.
                 // disable the record button
                 const recordButton = document.getElementById(`record-${data.id}`);
-                recordButton.classList.add('w3-disabled', 'w3-purple');
-                
+                recordButton.classList.add('w3-disabled', 'w3-grey');
+
 
 
                 // place the record into the editor
@@ -154,7 +165,8 @@ function editRecord(id, socket) {
                 recordId.value = data.id;
                 const recordTitle = document.getElementById('recordTitle');
                 recordTitle.value = data.label;
-
+                recordTitle.disabled = false;
+                recordTitle.classList.remove('w3-disabled')
                 // enable the editor-save button
                 const editorSave = document.getElementById('editorSave');
                 editorSave.disabled = false;
@@ -168,16 +180,17 @@ function editRecord(id, socket) {
 
                 resolve(data);
             });
-            socket.on('record-cleanup', (data) => {
-                console.log("record-cleanup", data);
-                clearEditor();
-                clearRecordViewer();
-                tidyActivity(data)
-                const recordButton = document.getElementById(`record-${data.id}`);
-                recordButton.classList.remove('w3-disabled', 'w3-purple');
+            // socket.on('record-cleanup', async (data) => {
+            //     console.log("IO-I: record-cleanup", data);
+            //     console.log("IO-I: ✍🏻 edit-reply", data);
+            //     clearEditor();
+            //     clearRecordViewer();
+            //     tidyActivity(data)
+            //     const recordButton = await document.getElementById(`record-${data.id}`);
+            //     await recordButton.classList.remove('w3-disabled', 'w3-grey');
 
-                resolve(null);
-            });
+            //     resolve(null);
+            // });
 
         } catch (error) {
             console.log(error);
@@ -191,17 +204,73 @@ function editRecord(id, socket) {
 //aiife 
 (async function () {
     const socket = io();
+    // show the verison in the UI
+    const versionSpan = document.getElementById('versionSpan');
+    versionSpan.innerText = `v${CURRENT_VERSION}`;
 
+    // add some handler for the editor inputs and save button
+    const editorEvents = ['change', 'focus', 'input', 'keyup', 'keydown', 'keypress', 'paste', 'cut', 'blur'];
+    const recordTitle = document.getElementById('recordTitle');
+    function tellServerWeAreEditing(e) {
+
+        const recordId = document.getElementById('recordId');
+        socket.emit('edit-action', recordId.value)
+        console.log("IO-O: ✍🏻 edit-action", recordId.value);
+    }
+
+    editorEvents.forEach(event => {
+        recordTitle.addEventListener(event, (e) => {
+            e.preventDefault
+            e.stopPropagation
+            console.log("recordTitle ", e);
+            tellServerWeAreEditing(e)
+        })
+    })
+
+    const editorSave = document.getElementById('editorSave');
+    editorSave.addEventListener('click', (e) => {
+        e.preventDefault
+        e.stopPropagation
+        console.log("editorSave ", e);
+        const recordId = document.getElementById('recordId');
+        const recordTitle = document.getElementById('recordTitle');
+        const record = {
+            id: recordId.value,
+            label: recordTitle.value
+        }
+        socket.emit('edit-save', record)
+        console.log("IO-O: ✍🏻 edit-save", record);
+    })
 
     // client-side
 
     socket.on("connect", async () => {
         console.log(`my socket ID is: ${socket.id}`);
-        socket.onAny((event, ...{}) => {
+        socket.onAny((event, ...{ }) => {
             console.log(`Socket Event: got ${event}`);
-          });
-      
+        });
+
         console.log("ready for a connection");
+        socket.on('record-cleanup', async (data) => {
+            console.log("IO-I: record-cleanup", data);
+            console.log("IO-I: ✍🏻 edit-reply", data);
+            if (data.client == socket.id) {
+                // this is my edit to clean up
+                clearEditor();
+                clearRecordViewer();
+            }
+            tidyActivity(data)
+            const recordButton = await document.getElementById(`record-${data.id}`);
+            // now set the name of the button to the new label
+            recordButton.innerHTML =
+                `    <i class="fa fa-car w3-bar-item vehicle w3-xlarge"></i>
+                    <div class="w3-bar-item">
+                    <span class="car-id">#${data.id}</span><span class="car-label">${data.label}</span>
+                    </div>`
+            await recordButton.classList.remove('w3-disabled', 'w3-grey');
+
+            return
+        });
         socket.on("user-announce", (list) => {
             console.log(`user-announce: ${list}`); // x8WIv7-mJelg7on_ALbx
             const user_list = document.getElementById('user_list');
@@ -232,11 +301,11 @@ function editRecord(id, socket) {
 
             // check if the message is already in the activity list
             const listItems2 = activity_list.getElementsByTagName('li');
-                for (let i = 0; i < listItems2.length; i++) {
-                    if (listItems2[i].innerHTML === message) {
-                        return;
-                    }
+            for (let i = 0; i < listItems2.length; i++) {
+                if (listItems2[i].innerHTML === message) {
+                    return;
                 }
+            }
 
 
             const newLi = document.createElement('li');
@@ -244,11 +313,12 @@ function editRecord(id, socket) {
             activity_list.appendChild(newLi);
 
         });
+
         console.log("ready for edit-notify");
         socket.on('record-notify', async (data) => {
             console.log("record-notify", data);
             if (data.isEdited) {
-                console.log("record-notify isEdited",data);
+                console.log("record-notify isEdited", data);
                 const activity_list = document.getElementById('activity_list');
                 const message = `Client ${data.client} updated record #${data.id}`;
                 await removeOldData(data.id, data.client, activity_list);
@@ -259,7 +329,7 @@ function editRecord(id, socket) {
                 activity_list.appendChild(newLi);
             }
             else {
-                console.log("record-notify is not Edited",data);
+                console.log("record-notify is not Edited", data);
                 const activity_list = document.getElementById('activity_list');
                 const message = `Client ${data.client} updated record #${data.id}`;
                 await removeOldData(data.id, data.client, activity_list);

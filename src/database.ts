@@ -11,6 +11,7 @@ export interface SimpleLiveObject {
     id: string;
     label: string;
     isLive: boolean;
+    beenEdited: boolean;
     lastUpdated: Date;
     client: string;
 }
@@ -45,7 +46,7 @@ export class LiveObject {
             id: this.id,
             label: this.label
         }
-        saveDBRecord(flat)
+        if (!this.beenEdited) saveDBRecord(flat)
         return flat;
 
     }
@@ -59,6 +60,7 @@ export class LiveObject {
             id: this.id,
             label: this.label,
             isLive: this.isLive,
+            beenEdited: this.beenEdited,
             lastUpdated: this.lastUpdated,
             client: this.client
         }
@@ -86,12 +88,27 @@ export class LiveObject {
 
 /**
  * If the user is editing, reset the timer.
- * @TODO: This is not called anywhere yet. connect it to the edit field * 
+ * 
  */
-    resetTimer() {
-        clearTimeout(this.handler);
+    async resetTimer() {
+        console.log(`resetting timer for record #${this.id} ${this.label}`);
+        await clearTimeout(this.handler);
+  
+       await this.startTimer();
+       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+       //@ts-ignore
+       console.log("LiveObject",this.handler?._idleStart);
+       return
     }
     
+/**
+ * Deactivate the timer
+ * 
+ */
+    endTimer() {
+        console.log(`stopping timer for record #${this.id} ${this.label}`);
+        return clearTimeout(this.handler);
+    }
       
 }
 
